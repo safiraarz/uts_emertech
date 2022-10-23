@@ -23,10 +23,19 @@ class Result extends StatefulWidget {
   State<Result> createState() => _ResultState();
 }
 
+String formatTime(int hitung) {
+  var secs = hitung;
+  var hours = (secs ~/ 3600).toString().padLeft(2, '0');
+  var minutes = ((secs % 3600) ~/ 60).toString().padLeft(2, '0');
+  var seconds = (secs % 60).toString().padLeft(2, '0');
+  return "$hours:$minutes:$seconds";
+}
+
 class _ResultState extends State<Result> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
+    String time = formatTime(widget.final_time);
     return Scaffold(
         appBar: AppBar(
           title: Text('Result'),
@@ -53,7 +62,7 @@ class _ResultState extends State<Result> {
                 height: 20,
               ),
               Text(
-                "Total time played: ${widget.final_time}",
+                "Total time played: " + time,
                 textAlign: TextAlign.left,
                 style: TextStyle(color: Colors.black, fontSize: 15),
               ),
