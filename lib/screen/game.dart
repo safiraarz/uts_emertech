@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:color_mixer_160419158/class/range.dart';
 import 'package:color_mixer_160419158/screen/result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_fadein/flutter_fadein.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:flutter/material.dart';
 import '../main.dart';
@@ -39,11 +38,10 @@ class Game extends StatefulWidget {
 }
 
 class _GameState extends State<Game> {
-  late final controller;
-  double _hitung = 5;
+  late double _hitung;
   late Timer _timer;
   double opacityLevel = 0;
-  double _iniValue = 5;
+  double _iniValue = 100;
   bool _isrun = false;
   int _question_no = 0;
   int _point = 0;
@@ -56,10 +54,13 @@ class _GameState extends State<Game> {
   int color_mixed = 0; //untuk hitung brp kali color di random
   int avg_guesses = 0; //untuk hitung rata2 tebakan tiap soal
   int hints_used = 0; //untuk hitung brp total hint digunakan
-  int total_score = 0; //untuk hitung total score
+  double total_score = 0; //untuk hitung total score
+
+  double curr_score = 0;
+  int benar = 0;
 
 //untuk score
-  double hint_mlt = 0; //untuk perhitungan skor di hint multiplier
+  double hint_mlt = 1; //untuk perhitungan skor di hint multiplier
   int guess_mlt = 0; //untuk perhitungan skor di guess multiplier
 
   String random_hex = "";
@@ -78,7 +79,8 @@ class _GameState extends State<Game> {
   static int result_red = 255;
   static int result_green = 255;
   static int result_blue = 255;
-  Color _warna = Color.fromRGBO(result_red, result_green, result_blue, 1);
+  Color _color_result =
+      Color.fromRGBO(result_red, result_green, result_blue, 1);
   int _euc = 0;
   //coba color
 
@@ -92,7 +94,7 @@ class _GameState extends State<Game> {
 
   void setNewTopTwo(List<String> data) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setStringList("_second_winner", data);
+    prefs.setStringList("second_winner", data);
     main();
   }
 
@@ -109,10 +111,9 @@ class _GameState extends State<Game> {
   }
 
   String formatTime(int hitung) {
-    var secs = hitung;
-    var hours = (secs ~/ 3600).toString().padLeft(2, '0');
-    var minutes = ((secs % 3600) ~/ 60).toString().padLeft(2, '0');
-    var seconds = (secs % 60).toString().padLeft(2, '0');
+    var hours = (hitung ~/ 3600).toString().padLeft(2, '0');
+    var minutes = ((hitung % 3600) ~/ 60).toString().padLeft(2, '0');
+    var seconds = (hitung % 60).toString().padLeft(2, '0');
     return "$hours:$minutes:$seconds";
   }
 
@@ -132,7 +133,7 @@ class _GameState extends State<Game> {
     } else if (_point >= _first_winner) {
       doRemove("First Winner");
       List<String> data = ['$username', '$_point'];
-      print("Pengecekan one " + data.toString());
+      print("First winner " + data.toString());
       setNewTopOne(data);
     }
     showDialog<String>(
@@ -166,7 +167,7 @@ class _GameState extends State<Game> {
       setState(() {
         if (_isrun) {
           _hitung--;
-          if (_hitung < 0) {
+          if (_hitung <= 0) {
             finishQuiz();
           }
         }
@@ -175,16 +176,9 @@ class _GameState extends State<Game> {
     });
   }
 
-  Fade() {
-    setState(() {
-      controller = FadeInController(autoStart: true);
-    });
-  }
-
   @override
   void initState() {
     // TODO: implement initState
-    Fade();
     super.initState();
     checkUser().then((String result) {
       if (result == '') {
@@ -225,7 +219,6 @@ class _GameState extends State<Game> {
     });
     _hitung = _iniValue;
     startTimer();
-    controller.fadeIn();
   }
 
   @override
@@ -261,7 +254,7 @@ class _GameState extends State<Game> {
               height: 10,
             ),
             Text(
-              "Score: ",
+              "Score: $total_score",
               textAlign: TextAlign.right,
               style: TextStyle(
                   color: Colors.black,
@@ -303,7 +296,7 @@ class _GameState extends State<Game> {
                   width: 150.0,
                   child: Container(
                       decoration: BoxDecoration(
-                          color: _warna,
+                          color: _color_result,
                           borderRadius: BorderRadius.all(Radius.circular(5.0))),
                       child: new Center()),
                 ),
@@ -403,21 +396,15 @@ class _GameState extends State<Game> {
                 ElevatedButton(
                     onPressed: () {
                       _euclidean();
-                      hasilTebakanPemain();
-                      _warna = Color.fromRGBO(
+                      result_euc();
+                      _color_result = Color.fromRGBO(
                           result_red, result_green, result_blue, 1);
                       //print("$result_red, $result_green,$result_blue");
-
+                      total_time+= (_iniValue - _hitung).ceil();
                       color_mixed += 1;
-                      avg_guesses += 1;
-
-                      int score = (hint_mlt * guess_mlt * _hitung).ceil();
-
-                      if (score < 0) {
-                        total_score += 1;
-                      } else {
-                        total_score += score;
-                      }
+                      avg_guesses = (color_mixed / benar).ceil();
+                      score_result();
+                      print(score_result());
 
                       red_value.text = "";
                       green_value.text = "";
@@ -434,11 +421,13 @@ class _GameState extends State<Game> {
                       _hitung -= _hitung / 2;
 
                       //menghitung value hint multiplier
-                      if (hints_used == 0) {
-                        hint_mlt += 1;
-                      } else if (hints_used > 1) {
-                        hint_mlt += 0.5;
-                      }
+                      // if (hints_used == 0) {
+                      //   hint_mlt += 1;
+                      // } else if (hints_used >= 1) {
+                      //   hint_mlt += 0.5;
+                      // }
+                      hint_mlt = 0.5;
+
                     },
                     child: Text("SHOW HINT")),
               ],
@@ -457,18 +446,29 @@ class _GameState extends State<Game> {
     return euc;
   }
 
-  String hasilTebakanPemain() {
+  String result_euc() {
     if (_euclidean() > 128) {
-      euc_guess = "#Try Again!";
+      euc_guess = "Try Again!";
     } else if (_euclidean() > 64 && _euclidean() <= 128) {
-      euc_guess = "#Too far!";
+      euc_guess = "Too far!";
     } else if (_euclidean() > 32 && _euclidean() <= 64) {
-      euc_guess = "#You got this!";
+      euc_guess = "You got this!";
+      benar++;
     } else if (_euclidean() > 16 && _euclidean() <= 32) {
-      euc_guess = "#Close enough...";
+      euc_guess = "Close enough";
     } else if (_euclidean() < 16) {
-      euc_guess = "#Almost!";
+      euc_guess = "Almost!";
     }
     return euc_guess;
+  }
+
+  double score_result() {
+    if (color_mixed >= 5) {
+      curr_score = hint_mlt* 1 * _hitung;
+    } else {
+      curr_score = hint_mlt * (5 - color_mixed) * _hitung;
+    }
+    total_score = total_score + curr_score;
+    return total_score;
   }
 }

@@ -1,7 +1,6 @@
-import 'dart:math';
+import 'package:color_mixer_160419158/main.dart';
 import 'package:color_mixer_160419158/screen/game.dart';
 import 'package:color_mixer_160419158/screen/high_score.dart';
-import 'package:color_mixer_160419158/screen/home.dart';
 import 'package:flutter/material.dart';
 
 class Result extends StatefulWidget {
@@ -17,7 +16,7 @@ class Result extends StatefulWidget {
   int final_color_mixed;
   int final_avg_guesses;
   int final_hints_used;
-  int final_total_score;
+  double final_total_score;
 
   @override
   State<Result> createState() => _ResultState();
@@ -105,7 +104,7 @@ class _ResultState extends State<Result> {
               ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => Home()));
+                        MaterialPageRoute(builder: (context) => MyApp()));
                   },
                   child: Text("MAIN MENU")),
             ])));
