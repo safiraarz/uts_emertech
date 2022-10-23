@@ -41,10 +41,9 @@ class _GameState extends State<Game> {
   late double _hitung;
   late Timer _timer;
   double opacityLevel = 0;
-  double _iniValue = 100;
+  double _iniValue = 20;
   bool _isrun = false;
   int _question_no = 0;
-  int _point = 0;
   int _first_winner = 0;
   int _second_winner = 0;
   int _third_winner = 0;
@@ -120,19 +119,19 @@ class _GameState extends State<Game> {
   finishQuiz() {
     _timer.cancel();
 
-    if (_point >= _third_winner && _point < _second_winner) {
+    if (total_score >= _third_winner && total_score < _second_winner) {
       doRemove("third_winner");
-      List<String> data = ['$username', '$_point'];
+      List<String> data = ['$username', '$total_score'];
       print("Third Winner " + data.toString());
       setNewTopThree(data);
-    } else if (_point >= _second_winner && _point < _first_winner) {
+    } else if (total_score >= _second_winner && total_score < _first_winner) {
       doRemove("second_winner");
-      List<String> data = ['$username', '$_point'];
+      List<String> data = ['$username', '$total_score'];
       print("Second Winner " + data.toString());
       setNewTopTwo(data);
-    } else if (_point >= _first_winner) {
+    } else if (total_score >= _first_winner) {
       doRemove("First Winner");
-      List<String> data = ['$username', '$_point'];
+      List<String> data = ['$username', '$total_score'];
       print("First winner " + data.toString());
       setNewTopOne(data);
     }
@@ -191,7 +190,7 @@ class _GameState extends State<Game> {
     firstHighScore().then((resultOne) {
       print(resultOne.length);
       if (resultOne.length == 0) {
-        List<String> data = ['$username', '$_point'];
+        List<String> data = ['$username', '$total_score'];
         setNewTopOne(data);
       } else {
         _first_winner = int.parse(resultOne[1]);
@@ -199,14 +198,14 @@ class _GameState extends State<Game> {
         secondHighScore().then((resultTwo) {
           print(resultTwo.length);
           if (resultTwo.length == 0) {
-            List<String> data = ['$username', '$_point'];
+            List<String> data = ['$username', '$total_score'];
             setNewTopTwo(data);
           } else {
             _second_winner = int.parse(resultTwo[1]);
             print("Second " + _second_winner.toString());
             thirdHighScore().then((resultThree) {
               if (resultThree.length == 0) {
-                List<String> data = ['$username', '$_point'];
+                List<String> data = ['$username', '$total_score'];
                 setNewTopThree(data);
               } else {
                 _third_winner = int.parse(resultThree[1]);
@@ -228,6 +227,43 @@ class _GameState extends State<Game> {
     super.dispose();
   }
 
+  //class
+  double _euclidean() {
+    double euc = sqrt(((randomR - result_red) * (randomR - result_red)) +
+        ((randomG - result_green) * (randomG - result_green)) +
+        ((randomB - result_green) * (randomB - result_green)));
+    return euc;
+  }
+
+  String result_euc() {
+    if (_euclidean() > 128) {
+      euc_guess = "Try Again!";
+    } else if (_euclidean() > 64 && _euclidean() <= 128) {
+      euc_guess = "Too far!";
+    } else if (_euclidean() > 32 && _euclidean() <= 64) {
+      euc_guess = "You got this!";
+      benar++;
+    } else if (_euclidean() > 16 && _euclidean() <= 32) {
+      euc_guess = "Close enough";
+    } else if (_euclidean() < 16) {
+      euc_guess = "Almost!";
+    }
+    return euc_guess;
+  }
+
+  double score_result() {
+    setState(() {
+      if (color_mixed >= 5) {
+        curr_score = hint_mlt * 1 * _hitung;
+      } else {
+        curr_score = hint_mlt * (5 - color_mixed) * _hitung;
+      }
+      total_score = total_score + curr_score;
+    });
+    print(total_score);
+    return total_score;
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -246,7 +282,10 @@ class _GameState extends State<Game> {
               center: Text(formatTime(_hitung.ceil())),
               width: MediaQuery.of(context).size.width,
               lineHeight: 30.0,
-              percent: 1 - (_hitung / _iniValue),
+              percent:
+                  (_hitung / _iniValue) >= 1.0 || (_hitung / _iniValue) <= 0.0
+                      ? 1.0
+                      : (_hitung / _iniValue),
               backgroundColor: Colors.grey,
               progressColor: Color.fromRGBO(randomR, randomG, randomB, 1),
             ),
@@ -395,22 +434,34 @@ class _GameState extends State<Game> {
               children: [
                 ElevatedButton(
                     onPressed: () {
-                      _euclidean();
-                      result_euc();
-                      _color_result = Color.fromRGBO(
-                          result_red, result_green, result_blue, 1);
-                      //print("$result_red, $result_green,$result_blue");
-                      total_time+= (_iniValue - _hitung).ceil();
-                      color_mixed += 1;
-                      avg_guesses = (color_mixed / benar).ceil();
-                      score_result();
-                      print(score_result());
+                      print("as");
 
-                      red_value.text = "";
-                      green_value.text = "";
-                      blue_value.text = "";
+                      setState(() {
+                        _euclidean();
+                        result_euc();
+                        print(_euclidean());
+                        _color_result = Color.fromRGBO(
+                            result_red, result_green, result_blue, 1);
+
+                        total_time += (_iniValue - _hitung).ceil();
+                        print(_hitung);
+                        print("color");
+                        color_mixed += 1;
+                        print(color_mixed);
+                        // avg_guesses = (color_mixed / benar).ceil();
+                        print(avg_guesses);
+                        score_result();
+
+                        print("colorss");
+
+                        red_value.text = "";
+                        green_value.text = "";
+                        blue_value.text = "";
+                      });
+
+                      score_result();
                     },
-                    child: Text("GUESS COLOR")),
+                    child: const Text("GUESS COLOR")),
                 ElevatedButton(
                     onPressed: () {
                       hints_used += 1;
@@ -427,7 +478,6 @@ class _GameState extends State<Game> {
                       //   hint_mlt += 0.5;
                       // }
                       hint_mlt = 0.5;
-
                     },
                     child: Text("SHOW HINT")),
               ],
@@ -436,39 +486,5 @@ class _GameState extends State<Game> {
         ),
       ),
     );
-  }
-
-  //class
-  double _euclidean() {
-    double euc = sqrt(((randomR - result_red) * (randomR - result_red)) +
-        ((randomG - result_green) * (randomG - result_green)) +
-        ((randomB - result_green) * (randomB - result_green)));
-    return euc;
-  }
-
-  String result_euc() {
-    if (_euclidean() > 128) {
-      euc_guess = "Try Again!";
-    } else if (_euclidean() > 64 && _euclidean() <= 128) {
-      euc_guess = "Too far!";
-    } else if (_euclidean() > 32 && _euclidean() <= 64) {
-      euc_guess = "You got this!";
-      benar++;
-    } else if (_euclidean() > 16 && _euclidean() <= 32) {
-      euc_guess = "Close enough";
-    } else if (_euclidean() < 16) {
-      euc_guess = "Almost!";
-    }
-    return euc_guess;
-  }
-
-  double score_result() {
-    if (color_mixed >= 5) {
-      curr_score = hint_mlt* 1 * _hitung;
-    } else {
-      curr_score = hint_mlt * (5 - color_mixed) * _hitung;
-    }
-    total_score = total_score + curr_score;
-    return total_score;
   }
 }
