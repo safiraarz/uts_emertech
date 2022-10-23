@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:color_mixer_160419158/screen/result.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,7 +28,7 @@ class HighScore extends StatefulWidget {
 
 class _HighScore extends State<HighScore> {
   bool isChanged = false;
-    String first_won = "";
+  String first_won = "";
   String second_won = "";
   String thrid_won = "";
   late Timer _timer;
@@ -139,70 +140,76 @@ class _HighScore extends State<HighScore> {
                     ),
                   ),
                 ])),
-            AnimatedContainer(
-              duration: Duration(milliseconds: 500),
-              margin: EdgeInsets.all(10),
-              padding: EdgeInsets.only(top: 20, bottom: 20, left: 0, right: 0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-                color: Color.fromARGB(255, 156, 175, 136),
-              ),
+            Container(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                      child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Image.asset("assets/images/first_place.gif", height: 75),
-                      Text(
-                        first_won,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            fontSize: 17),
+                  Card(
+                      color: Color.fromARGB(255, 156, 175, 140),
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ],
-                  )),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Image.asset("assets/images/first_place.gif",
+                              height: 75),
+                          Text(
+                            first_won,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 17),
+                          ),
+                        ],
+                      )),
                   SizedBox(
                     height: 15,
                   ),
-                  Container(
-                      child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Image.asset("assets/images/2nd_place.gif", height: 75),
-                      Text(
-                        second_won,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            fontSize: 17),
+                  Card(
+                      color: Color.fromARGB(255, 156, 175, 140),
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ],
-                  )),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Image.asset("assets/images/2nd_place.gif",
+                              height: 75),
+                          Text(
+                            second_won,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 17),
+                          ),
+                        ],
+                      )),
                   SizedBox(
                     height: 15,
                   ),
-                  Container(
-                      child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Image.asset("assets/images/3rd_place.gif", height: 75),
-                      Text(
-                        thrid_won,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            fontSize: 17),
+                  Card(
+                      color: Color.fromARGB(255, 156, 175, 140),
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ],
-                  )),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Image.asset("assets/images/3rd_place.gif",
+                              height: 75),
+                          Text(
+                            thrid_won,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 17),
+                          ),
+                        ],
+                      )),
                 ],
               ),
             ),

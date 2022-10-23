@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:color_mixer_160419158/class/range.dart';
-import 'package:color_mixer_160419158/screen/home.dart';
+import 'package:color_mixer_160419158/screen/result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_fadein/flutter_fadein.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:flutter/material.dart';
-import '../class/color2.dart';
 import '../main.dart';
 
 String username = "";
@@ -41,24 +40,47 @@ class Game extends StatefulWidget {
 
 class _GameState extends State<Game> {
   late final controller;
-  late int _hitung;
+  double _hitung = 5;
   late Timer _timer;
   double opacityLevel = 0;
-  int _iniValue = 10;
+  double _iniValue = 5;
   bool _isrun = false;
   int _question_no = 0;
-  int _stage = 0;
   int _point = 0;
   int _first_winner = 0;
   int _second_winner = 0;
   int _third_winner = 0;
 
+  //variable yg disimpan utk result
+  int total_time = 0; //untuk hitung total waktu yg dimainkan
+  int color_mixed = 0; //untuk hitung brp kali color di random
+  int avg_guesses = 0; //untuk hitung rata2 tebakan tiap soal
+  int hints_used = 0; //untuk hitung brp total hint digunakan
+  int total_score = 0; //untuk hitung total score
+
+//untuk score
+  double hint_mlt = 0; //untuk perhitungan skor di hint multiplier
+  int guess_mlt = 0; //untuk perhitungan skor di guess multiplier
+
+  String random_hex = "";
+  String player_hex = "";
+  String euc_guess = "";
+
   //coba color
-  Random random = Random();
-  int randomR = 0;
-  int randomG = 0;
-  int randomB = 0;
-  //coba col
+  int randomR = Random().nextInt(256);
+  int randomG = Random().nextInt(256);
+  int randomB = Random().nextInt(256);
+
+  final TextEditingController red_value = TextEditingController();
+  final TextEditingController green_value = TextEditingController();
+  final TextEditingController blue_value = TextEditingController();
+
+  static int result_red = 255;
+  static int result_green = 255;
+  static int result_blue = 255;
+  Color _warna = Color.fromRGBO(result_red, result_green, result_blue, 1);
+  int _euc = 0;
+  //coba color
 
   //Set Shared
 
@@ -122,14 +144,35 @@ class _GameState extends State<Game> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context, 'SHOW RESULT');
-                    Navigator.pop(
-                      context,
-                    );
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Result(
+                                  final_time: total_time,
+                                  final_color_mixed: color_mixed,
+                                  final_avg_guesses: avg_guesses,
+                                  final_hints_used: hints_used,
+                                  final_total_score: total_score,
+                                )));
                   },
                   child: const Text('SHOW RESULT'),
                 ),
               ],
             ));
+  }
+
+  startTimer() {
+    _timer = new Timer.periodic(new Duration(milliseconds: 1000), (timer) {
+      setState(() {
+        if (_isrun) {
+          _hitung--;
+          if (_hitung < 0) {
+            finishQuiz();
+          }
+        }
+        _isrun = true;
+      });
+    });
   }
 
   Fade() {
@@ -150,6 +193,7 @@ class _GameState extends State<Game> {
         username = result;
       }
     });
+
     firstHighScore().then((resultOne) {
       print(resultOne.length);
       if (resultOne.length == 0) {
@@ -180,7 +224,7 @@ class _GameState extends State<Game> {
       }
     });
     _hitung = _iniValue;
-    //startTimer();
+    startTimer();
     controller.fadeIn();
   }
 
@@ -194,9 +238,6 @@ class _GameState extends State<Game> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    randomR = random.nextInt(256);
-    randomG = random.nextInt(256);
-    randomB = random.nextInt(256);
 
     return Scaffold(
       appBar: AppBar(
@@ -204,17 +245,20 @@ class _GameState extends State<Game> {
       ),
       body: SingleChildScrollView(
         child: Center(
-          child: Column(children: [
-            Padding(
-              padding: EdgeInsets.all(10),
-              child: LinearPercentIndicator(
-                center: Text(formatTime(_hitung)),
-                width: MediaQuery.of(context).size.width - 20,
-                lineHeight: 25.0,
-                percent: 1 - (_hitung / _iniValue),
-                backgroundColor: Colors.grey,
-                progressColor: Colors.blueAccent,
-              ),
+          child: Column(children: <Widget>[
+            Divider(
+              height: 15,
+            ),
+            LinearPercentIndicator(
+              center: Text(formatTime(_hitung.ceil())),
+              width: MediaQuery.of(context).size.width,
+              lineHeight: 30.0,
+              percent: 1 - (_hitung / _iniValue),
+              backgroundColor: Colors.grey,
+              progressColor: Color.fromRGBO(randomR, randomG, randomB, 1),
+            ),
+            Divider(
+              height: 10,
             ),
             Text(
               "Score: ",
@@ -246,39 +290,35 @@ class _GameState extends State<Game> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Container(
-                  // height: 150.0,
-                  // width: 150.0,
-                  // color: Colors.transparent,
-                  // child: Container(
-                  //     decoration: BoxDecoration(
-                  //         color: Colors.green,
-                  //         borderRadius: BorderRadius.all(Radius.circular(5.0))),
-                  //     child: new Center()),
-                  child: ColorOptions(randomR, randomG, randomB)
+                  height: 150.0,
+                  width: 150.0,
+                  child: Container(
+                      decoration: BoxDecoration(
+                          color: Color.fromRGBO(randomR, randomG, randomB, 1),
+                          borderRadius: BorderRadius.all(Radius.circular(5.0))),
+                      child: new Center()),
                 ),
                 Container(
                   height: 150.0,
                   width: 150.0,
-                  color: Colors.transparent,
                   child: Container(
                       decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: _warna,
                           borderRadius: BorderRadius.all(Radius.circular(5.0))),
                       child: new Center()),
                 ),
               ],
-
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Text(
-                  "#Coba kiri ",
+                  "$random_hex",
                   textAlign: TextAlign.justify,
                   style: TextStyle(color: Colors.black, fontSize: 17),
                 ),
                 Text(
-                  "#Coba kanan",
+                  "$player_hex",
                   textAlign: TextAlign.justify,
                   style: TextStyle(color: Colors.black, fontSize: 17),
                 ),
@@ -288,39 +328,71 @@ class _GameState extends State<Game> {
               height: 15,
             ),
             Text(
-              "#Coba too far atau ga ",
+              "$euc_guess",
               textAlign: TextAlign.justify,
               style: TextStyle(color: Colors.black, fontSize: 17),
             ),
             Divider(
               height: 15,
             ),
-            TextField(
-              decoration: InputDecoration(hintText: 'Red (0-255)'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                CustomRangeTextInputFormatter(),
-              ],
+            Padding(
+                padding: EdgeInsets.all(10),
+                child: TextField(
+                    controller: red_value,
+                    decoration: InputDecoration(hintText: 'Red (0-255)'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      CustomRangeTextInputFormatter(),
+                    ],
+                    onChanged: (v) {
+                      if (red_value != "") {
+                        _euclidean();
+                        result_red = int.parse(red_value.text);
+                      } else {
+                        result_red = 255;
+                      }
+                    })),
+            Divider(
+              height: 20,
+            ),
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: TextField(
+                  controller: green_value,
+                  decoration: InputDecoration(hintText: 'Green (0-255)'),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    CustomRangeTextInputFormatter(),
+                  ],
+                  onChanged: (v) {
+                    if (green_value != "") {
+                      _euclidean();
+                      result_green = int.parse(green_value.text);
+                    } else {
+                      result_green = 255;
+                    }
+                  }),
             ),
             Divider(
               height: 20,
             ),
-            TextField(
-              decoration: InputDecoration(hintText: 'Green (0-255)'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                CustomRangeTextInputFormatter(),
-              ],
-            ),
-            Divider(
-              height: 20,
-            ),
-            TextField(
-              decoration: InputDecoration(hintText: 'Blue (0-255)'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                CustomRangeTextInputFormatter(),
-              ],
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: TextField(
+                  controller: blue_value,
+                  decoration: InputDecoration(hintText: 'Blue (0-255)'),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    CustomRangeTextInputFormatter(),
+                  ],
+                  onChanged: (v) {
+                    if (blue_value != "") {
+                      _euclidean();
+                      result_blue = int.parse(blue_value.text);
+                    } else {
+                      result_blue = 255;
+                    }
+                  }),
             ),
             Divider(
               height: 30,
@@ -330,14 +402,43 @@ class _GameState extends State<Game> {
               children: [
                 ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => Home()));
+                      _euclidean();
+                      hasilTebakanPemain();
+                      _warna = Color.fromRGBO(
+                          result_red, result_green, result_blue, 1);
+                      //print("$result_red, $result_green,$result_blue");
+
+                      color_mixed += 1;
+                      avg_guesses += 1;
+
+                      int score = (hint_mlt * guess_mlt * _hitung).ceil();
+
+                      if (score < 0) {
+                        total_score += 1;
+                      } else {
+                        total_score += score;
+                      }
+
+                      red_value.text = "";
+                      green_value.text = "";
+                      blue_value.text = "";
                     },
                     child: Text("GUESS COLOR")),
                 ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => Home()));
+                      hints_used += 1;
+                      random_hex =
+                          "#${Color.fromRGBO(randomR, randomG, randomB, 1).value.toRadixString(16)}";
+                      player_hex =
+                          "#${Color.fromRGBO(result_red, result_green, result_blue, 1).value.toRadixString(16)}";
+                      _hitung -= _hitung / 2;
+
+                      //menghitung value hint multiplier
+                      if (hints_used == 0) {
+                        hint_mlt += 1;
+                      } else if (hints_used > 1) {
+                        hint_mlt += 0.5;
+                      }
                     },
                     child: Text("SHOW HINT")),
               ],
@@ -346,5 +447,28 @@ class _GameState extends State<Game> {
         ),
       ),
     );
+  }
+
+  //class
+  double _euclidean() {
+    double euc = sqrt(((randomR - result_red) * (randomR - result_red)) +
+        ((randomG - result_green) * (randomG - result_green)) +
+        ((randomB - result_green) * (randomB - result_green)));
+    return euc;
+  }
+
+  String hasilTebakanPemain() {
+    if (_euclidean() > 128) {
+      euc_guess = "#Try Again!";
+    } else if (_euclidean() > 64 && _euclidean() <= 128) {
+      euc_guess = "#Too far!";
+    } else if (_euclidean() > 32 && _euclidean() <= 64) {
+      euc_guess = "#You got this!";
+    } else if (_euclidean() > 16 && _euclidean() <= 32) {
+      euc_guess = "#Close enough...";
+    } else if (_euclidean() < 16) {
+      euc_guess = "#Almost!";
+    }
+    return euc_guess;
   }
 }
