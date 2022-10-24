@@ -47,6 +47,9 @@ class _GameState extends State<Game> {
   int _first_winner = 0;
   int _second_winner = 0;
   int _third_winner = 0;
+  String _user_first_winner = "";
+  String _user_second_winner = "";
+  String _user_third_winner = "";
 
   //variable yg disimpan utk result
   int total_time = 0; //untuk hitung total waktu yg dimainkan
@@ -121,16 +124,61 @@ class _GameState extends State<Game> {
 
     if (total_score >= _third_winner && total_score < _second_winner) {
       doRemove("third_winner");
-      List<String> data = ['$username', '$total_score'];
+      double tampung = 0;
+      String usr_tampung = "";
+
+      if (total_score > _second_winner) {
+        tampung = double.parse(_second_winner.toString());
+        usr_tampung = _user_first_winner;
+      } else {
+        usr_tampung = username;
+        tampung = total_score;
+      }
+      List<String> data = ['$usr_tampung', '$tampung'];
       print("Third Winner " + data.toString());
       setNewTopThree(data);
     } else if (total_score >= _second_winner && total_score < _first_winner) {
       doRemove("second_winner");
+      doRemove("third_winner");
+      String usr_tampung = "";
+      double tampung = 0;
+      if (_third_winner < _second_winner) {
+        tampung = double.parse(_second_winner.toString());
+        usr_tampung = _user_second_winner;
+        List<String> data2 = ['$usr_tampung', '$tampung'];
+        print("Three Winner " + data2.toString());
+        setNewTopThree(data2);
+      }
+
       List<String> data = ['$username', '$total_score'];
       print("Second Winner " + data.toString());
       setNewTopTwo(data);
     } else if (total_score >= _first_winner) {
       doRemove("First Winner");
+      doRemove("second_winner");
+      doRemove("third_winner");
+      String usr_tampung = "";
+      double tampung = 0;
+      if (_second_winner < _first_winner) {
+        tampung = double.parse(_first_winner.toString());
+        usr_tampung = _user_first_winner;
+        List<String> data2 = ['$usr_tampung', '$tampung'];
+        print("Second Winner " + data2.toString());
+        setNewTopTwo(data2);
+      }
+      if (_third_winner < _second_winner) {
+        tampung = double.parse(_second_winner.toString());
+        usr_tampung = _user_second_winner;
+        List<String> data2 = ['$usr_tampung', '$tampung'];
+        print("Three Winner " + data2.toString());
+        setNewTopThree(data2);
+      }
+
+      //  if (_second_winner < _first_winner) {
+      //   tampung = double.parse(_first_winner.toString());
+      //   usr_tampung = _user_first_winner;
+      // }
+
       List<String> data = ['$username', '$total_score'];
       print("First winner " + data.toString());
       setNewTopOne(data);
@@ -193,6 +241,7 @@ class _GameState extends State<Game> {
         List<String> data = ['$username', '$total_score'];
         setNewTopOne(data);
       } else {
+        _user_first_winner = resultOne[0];
         _first_winner = int.parse(resultOne[1]);
         print("First " + _first_winner.toString());
         secondHighScore().then((resultTwo) {
@@ -201,6 +250,7 @@ class _GameState extends State<Game> {
             List<String> data = ['$username', '$total_score'];
             setNewTopTwo(data);
           } else {
+            _user_second_winner = resultTwo[0];
             _second_winner = int.parse(resultTwo[1]);
             print("Second " + _second_winner.toString());
             thirdHighScore().then((resultThree) {
@@ -208,6 +258,7 @@ class _GameState extends State<Game> {
                 List<String> data = ['$username', '$total_score'];
                 setNewTopThree(data);
               } else {
+                _user_third_winner = resultThree[0];
                 _third_winner = int.parse(resultThree[1]);
                 print("Third " + _third_winner.toString());
               }
